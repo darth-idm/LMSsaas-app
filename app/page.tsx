@@ -8,9 +8,30 @@ const Page = () => {
       <h1>Popular Companions</h1>
 
       <section className="home-section">
-        <CompanionCard />
-        <CompanionCard />
-        <CompanionCard />
+        <CompanionCard
+          companionId="1"
+          subject="Science"
+          topic="Neural Network of the Brain"
+          name="Neura the Brainy Explorer"
+          duration={45}
+          color="#E5D0FF"
+        />
+        <CompanionCard
+          companionId="2"
+          subject="Science"
+          topic="Neural Network of the Brain"
+          name="Neura the Brainy Explorer"
+          color="#E5D0FF"
+          duration={45}
+        />
+        <CompanionCard
+          companionId="3"
+          subject="Science"
+          topic="Neural Network of the Brain"
+          name="Neura the Brainy Explorer"
+          color="#E5D0FF"
+          duration={45}
+        />
       </section>
 
       <section className="home-section">
