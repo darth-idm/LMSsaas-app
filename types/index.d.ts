@@ -76,4 +76,5 @@ interface CompanionComponentProps {
   topic: string;
   name: string;
   color: string;
+  duration: number;
 }
