@@ -9,28 +9,28 @@ const Page = () => {
 
       <section className="home-section">
         <CompanionCard
-          companionId="1"
-          subject="Science"
-          topic="Neural Network of the Brain"
+          id="123"
           name="Neura the Brainy Explorer"
+          topic="Neural Network of the Brain"
+          subject="Science"
           duration={45}
-          color="#E5D0FF"
+          color="#ffda6e"
         />
         <CompanionCard
-          companionId="2"
-          subject="Science"
-          topic="Neural Network of the Brain"
-          name="Neura the Brainy Explorer"
-          color="#E5D0FF"
-          duration={45}
+          id="456"
+          name="Countsy the Number Wizard"
+          topic="Derivatives & Integrals"
+          subject="Math"
+          duration={30}
+          color="#e5d0ff"
         />
         <CompanionCard
-          companionId="3"
-          subject="Science"
-          topic="Neural Network of the Brain"
-          name="Neura the Brainy Explorer"
-          color="#E5D0FF"
-          duration={45}
+          id="789"
+          name="Verba the Vocabulary Builder"
+          topic="Language"
+          subject="English Literature"
+          duration={30}
+          color="#BDE7FF"
         />
       </section>
 
