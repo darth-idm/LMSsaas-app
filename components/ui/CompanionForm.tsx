@@ -1,13 +1,11 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -37,7 +35,6 @@ const formSchema = z.object({
 
 const CompanionForm = () => {
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       subject: "",
@@ -49,21 +46,13 @@ const CompanionForm = () => {
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const companion = await createCompanion(values);
-
-    if (companion) {
-      redirect(`/companions/${companion.id}`);
-    } else {
-      console.log("Failed to create a companion");
-      redirect("/");
-    }
+    console.log(values);
   };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <FormField
-          control={form.control}
           name="name"
           render={({ field }) => (
             <FormItem>
@@ -80,7 +69,6 @@ const CompanionForm = () => {
           )}
         />
         <FormField
-          control={form.control}
           name="subject"
           render={({ field }) => (
             <FormItem>
@@ -112,14 +100,13 @@ const CompanionForm = () => {
           )}
         />
         <FormField
-          control={form.control}
           name="topic"
           render={({ field }) => (
             <FormItem>
               <FormLabel>What should the companion help with?</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Ex. Derivates & Integrals"
+                  placeholder="Ex. Derivatives & Integrals"
                   {...field}
                   className="input"
                 />
@@ -130,7 +117,6 @@ const CompanionForm = () => {
         />
 
         <FormField
-          control={form.control}
           name="voice"
           render={({ field }) => (
             <FormItem>
@@ -155,7 +141,6 @@ const CompanionForm = () => {
           )}
         />
         <FormField
-          control={form.control}
           name="style"
           render={({ field }) => (
             <FormItem>
