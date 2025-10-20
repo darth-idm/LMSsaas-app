@@ -65,7 +65,7 @@ const CompanionForm = () => {
         <FormField
           control={form.control}
           name="name"
-          render={({ field }: { field: any }) => (
+          render={({ field }) => (
             <FormItem>
               <FormLabel>Companion name</FormLabel>
               <FormControl>
@@ -82,7 +82,7 @@ const CompanionForm = () => {
         <FormField
           control={form.control}
           name="subject"
-          render={({ field }: { field: any }) => (
+          render={({ field }) => (
             <FormItem>
               <FormLabel>Subject</FormLabel>
               <FormControl>
@@ -114,7 +114,7 @@ const CompanionForm = () => {
         <FormField
           control={form.control}
           name="topic"
-          render={({ field }: { field: any }) => (
+          render={({ field }) => (
             <FormItem>
               <FormLabel>What should the companion help with?</FormLabel>
               <FormControl>
@@ -132,7 +132,7 @@ const CompanionForm = () => {
         <FormField
           control={form.control}
           name="voice"
-          render={({ field }: { field: any }) => (
+          render={({ field }) => (
             <FormItem>
               <FormLabel>Voice</FormLabel>
               <FormControl>
@@ -157,7 +157,7 @@ const CompanionForm = () => {
         <FormField
           control={form.control}
           name="style"
-          render={({ field }: { field: any }) => (
+          render={({ field }) => (
             <FormItem>
               <FormLabel>Style</FormLabel>
               <FormControl>
@@ -183,7 +183,7 @@ const CompanionForm = () => {
         <FormField
           control={form.control}
           name="duration"
-          render={({ field }: { field: any }) => (
+          render={({ field }) => (
             <FormItem>
               <FormLabel>Estimated session duration in minutes</FormLabel>
               <FormControl>
