@@ -1,23 +1,37 @@
-import { currentUser } from "@clerk/nextjs/server";
-import CompanionsList from "@/components/CompanionsList";
+import { getAllCompanions } from "@/lib/actions/companion.actions";
+import CompanionCard from "@/components/CompanionCard";
+import { getSubjectColor } from "@/lib/utils";
+import SearchInput from "@/components/SearchInput";
+import SubjectFilter from "@/components/SubjectFilter";
 
-const CompanionsLibrary = async () => {
-  const user = await currentUser();
+const CompanionsLibrary = async ({ searchParams }: SearchParams) => {
+  const filters = await searchParams;
+  const subject = filters.subject ? filters.subject : "";
+  const topic = filters.topic ? filters.topic : "";
+
+  const companions = await getAllCompanions({ subject, topic });
+
+  console.log(companions);
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          AI Companions Library
-        </h1>
-        <p className="text-gray-600">
-          Welcome back, {user?.firstName || "User"}! Explore your AI learning
-          companions.
-        </p>
-      </div>
-
-      <CompanionsList title="Your AI Companions" />
-    </div>
+    <main>
+      <section className="home-flex justify-between gap-4 max-sm:flex-col">
+        <h1>Companions Library</h1>
+        <div className="flex items-center gap-4">
+          <SearchInput />
+          <SubjectFilter />
+        </div>
+      </section>
+      <section className="companions-grid">
+        {companions.map((companion) => (
+          <CompanionCard
+            key={companion.id}
+            {...companion}
+            color={getSubjectColor(companion.subject)}
+          />
+        ))}
+      </section>
+    </main>
   );
 };
 
