@@ -13,5 +13,5 @@
     "typescript": "typescript",
     "typescriptreact": "typescriptreact"
   },
-  "cSpell.words": ["turbopack"]
+  "cSpell.words": ["supabase", "turbopack"]
 }
