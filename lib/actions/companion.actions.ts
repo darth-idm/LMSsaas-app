@@ -55,7 +55,13 @@ export const getCompanion = async (id: string) => {
     .single();
 
   if (error) {
-    console.error("Error fetching companion:", error);
+    console.error("Error fetching companion:", {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
+      id: id,
+    });
     return null;
   }
 

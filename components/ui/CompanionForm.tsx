@@ -1,6 +1,7 @@
 "use client";
 
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +24,7 @@ import { subjects } from "@/constants";
 import { Textarea } from "@/components/ui/textarea";
 import { createCompanion } from "@/lib/actions/companion.actions";
 import { redirect } from "next/navigation";
+import { useState } from "react";
 
 const formSchema = z.object({
   name: z.string().min(1, { message: "Companion is required." }),
@@ -30,29 +32,47 @@ const formSchema = z.object({
   topic: z.string().min(1, { message: "Topic is required." }),
   voice: z.string().min(1, { message: "Voice is required." }),
   style: z.string().min(1, { message: "Style is required." }),
-  duration: z.coerce.number().min(1, { message: "Duration is required." }),
+  duration: z.string().min(1, { message: "Duration is required." }),
 });
 
+type FormData = z.infer<typeof formSchema>;
+
 const CompanionForm = () => {
-  const form = useForm<z.infer<typeof formSchema>>({
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       subject: "",
       topic: "",
       voice: "",
       style: "",
-      duration: 15,
+      duration: "15",
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const companion = await createCompanion(values);
+  const onSubmit = async (values: FormData) => {
+    setIsSubmitting(true);
+    try {
+      // Convert duration string to number for the API
+      const companionData = {
+        ...values,
+        duration: parseInt(values.duration, 10),
+      };
 
-    if (companion) {
-      redirect(`/companions/${companion.$id}`);
-    } else {
-      console.log("Failed to create companion");
-      redirect("/");
+      const companion = await createCompanion(companionData);
+
+      if (companion) {
+        redirect(`/companions/${companion.id}`);
+      } else {
+        console.log("Failed to create companion");
+        redirect("/");
+      }
+    } catch (error) {
+      console.error("Error creating companion:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -190,8 +210,12 @@ const CompanionForm = () => {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full cursor-pointer">
-          Build Your Companion
+        <Button
+          type="submit"
+          className="w-full cursor-pointer"
+          disabled={isSubmitting || !form.formState.isValid}
+        >
+          {isSubmitting ? "Building..." : "Build Your Companion"}
         </Button>
       </form>
     </Form>
