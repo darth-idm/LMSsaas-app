@@ -13,5 +13,12 @@
     "typescript": "typescript",
     "typescriptreact": "typescriptreact"
   },
-  "cSpell.words": ["ilike", "soundwaves", "supabase", "turbopack", "vapi"]
+  "cSpell.words": [
+    "deepgram",
+    "ilike",
+    "soundwaves",
+    "supabase",
+    "turbopack",
+    "vapi"
+  ]
 }
