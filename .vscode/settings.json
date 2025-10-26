@@ -13,5 +13,5 @@
     "typescript": "typescript",
     "typescriptreact": "typescriptreact"
   },
-  "cSpell.words": ["ilike", "supabase", "turbopack"]
+  "cSpell.words": ["ilike", "supabase", "turbopack", "vapi"]
 }

@@ -15,7 +15,7 @@ import { formUrlQuery, removeKeysFromUrlQuery } from "@jsmastery/utils";
 const SubjectFilter = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const query = searchParams.get("subject") || "";
+  const query = searchParams.get("subject") || "all";
 
   const [subject, setSubject] = useState(query);
 
@@ -34,7 +34,7 @@ const SubjectFilter = () => {
       });
     }
     router.push(newUrl, { scroll: false });
-  }, [subject]);
+  }, [subject, searchParams, router]);
 
   return (
     <Select onValueChange={setSubject} value={subject}>

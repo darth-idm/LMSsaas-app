@@ -1,60 +1,54 @@
+import { getCompanion } from "@/lib/actions/companion.actions";
 import { currentUser } from "@clerk/nextjs/server";
-import { UserButton } from "@clerk/nextjs";
-
-interface CompanionSessionProps {
-  params: {
-    id: string;
-  };
+import { redirect } from "next/navigation";
+import { getSubjectColor } from "@/lib/utils";
+import Image from "next/image";
+interface CompanionSessionPageProps {
+  params: Promise<{ id: string }>;
 }
 
-const CompanionSession = async ({ params }: CompanionSessionProps) => {
+// params /url/{id} -> id
+// searchParams /url?key=value&key1=value1
+
+const CompanionSession = async ({ params }: CompanionSessionPageProps) => {
+  const { id } = await params;
+  const companion = await getCompanion(id);
   const user = await currentUser();
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              AI Companion Session
-            </h1>
-            <p className="text-gray-600">
-              Learning session with your AI companion,{" "}
-              {user?.firstName || "User"}.
-            </p>
-          </div>
-          <UserButton afterSignOutUrl="/" />
-        </div>
-      </div>
+  if (!user) redirect("/sign-in");
+  if (!companion) redirect("/companions");
 
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white p-8 rounded-lg shadow-md">
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-semibold mb-4">
-              Companion ID: {params.id}
-            </h2>
-            <p className="text-gray-600 mb-6">
-              Your AI learning session will start here. This is where
-              you&apos;ll interact with your personalized AI companion.
-            </p>
-            <div className="space-y-4">
-              <button className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors">
-                Start Learning Session
-              </button>
-              <div className="text-sm text-gray-500">
-                <p>Features coming soon:</p>
-                <ul className="list-disc list-inside mt-2 space-y-1">
-                  <li>Real-time AI conversation</li>
-                  <li>Interactive learning modules</li>
-                  <li>Progress tracking</li>
-                  <li>Personalized feedback</li>
-                </ul>
-              </div>
+  const { name, subject, title, topic, duration } = companion;
+
+  return (
+    <main>
+      <article className="flex rounded-border justify-between p-6 max-md:flex-col">
+        <div className="flex items-center gap-2">
+          <div
+            className="size-[72px] flex items-center justify-center rounded-lg max-md:hidden"
+            style={{ backgroundColor: getSubjectColor(subject) }}
+          >
+            <Image
+              src={`/icons/${subject}.svg`}
+              alt={subject}
+              width={35}
+              height={35}
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <p className="font-bold text-2xl">{name}</p>
+              <div className="subject-badge max-sm:hidden">{subject}</div>
             </div>
+            <p className="text-lg">{topic}</p>
           </div>
         </div>
-      </div>
-    </div>
+        <div className="items-start text-2xl max-md:hidden">
+          {duration} minutes
+        </div>
+      </article>
+    </main>
   );
 };
 
