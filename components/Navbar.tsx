@@ -1,7 +1,13 @@
 import Link from "next/link";
 import Image from "next/image";
 import NavItems from "./NavItems";
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import {
+  SignInButton,
+  SignedIn,
+  SignedOut,
+  SignUp,
+  UserButton,
+} from "@clerk/nextjs";
 
 const Navbar = () => {
   return (
@@ -27,7 +33,7 @@ const Navbar = () => {
           </Link>
         </SignedOut>
         <SignedIn>
-          <UserButton afterSignOutUrl="/" />
+          <UserButton />
         </SignedIn>
       </div>
     </nav>
