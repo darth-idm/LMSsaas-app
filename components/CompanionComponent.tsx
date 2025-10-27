@@ -297,17 +297,17 @@ const CompanionComponent = ({
 
       <section className="transcript">
         <div className="transcript-message no scrollbar">
-          {messages.map((message) => {
+          {messages.map((message, index) => {
             if (message.role === "assistant") {
               return (
-                <p key={message.content} className="max-sm:text-sm">
+                <p key={`assistant-${index}`} className="max-sm:text-sm">
                   {name.split(" ")[0].replace(/[,.]/g, "")}: {message.content}
                 </p>
               );
             } else {
               return (
                 <p
-                  key={message.content}
+                  key={`user-${index}`}
                   className="text-primary max-sm:text-sm"
                 >
                   {userName}: {message.content}

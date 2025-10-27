@@ -9,6 +9,12 @@ const Page = async () => {
   const companions = await getAllCompanions({ limit: 3 });
   const recentSessionsCompanions = await getRecentSessions(10);
 
+  // Deduplicate recent sessions by companion ID to prevent duplicate keys
+  const uniqueRecentSessions = recentSessionsCompanions.filter(
+    (companion, index, self) =>
+      index === self.findIndex((c) => c.id === companion.id)
+  );
+
   return (
     <main>
       <h1>Popular Companions</h1>
@@ -16,7 +22,7 @@ const Page = async () => {
       <section className="home-section">
         {companions.map((companion) => (
           <CompanionCard
-            key={companion.id}
+            key={`popular-${companion.id}`}
             {...companion}
             color={getSubjectColor(companion.subject)}
           />
@@ -26,8 +32,9 @@ const Page = async () => {
       <section className="home-section">
         <CompanionsList
           title="Recently completed sessions"
-          companions={recentSessionsCompanions}
+          companions={uniqueRecentSessions}
           classNames="w-2/3 max-lg:w-full"
+          keyPrefix="recent-"
         />
         <CTA />
       </section>
