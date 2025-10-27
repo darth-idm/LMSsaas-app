@@ -1,49 +1,94 @@
+import React from "react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { currentUser } from "@clerk/nextjs/server";
-import { UserButton } from "@clerk/nextjs";
+import { redirect } from "next/navigation";
+import { getUserCompanions } from "@/lib/actions/companion.actions";
+import { getUserSessions } from "@/lib/actions/companion.actions";
+import Image from "next/image";
+import CompanionsList from "@/components/CompanionsList";
 
-const MyJourney = async () => {
+const Profile = async () => {
   const user = await currentUser();
 
+  if (!user) redirect("/sign-in");
+
+  const companions = await getUserCompanions(user.id);
+  const sessionHistory = await getUserSessions(user.id);
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              My Learning Journey
+    <main className="min-lg:w-3/4">
+      <section className="flex justify-between gap-4 max-sm:flex-col items-center">
+        <div className="flex gap-4 items-center">
+          <Image
+            src={user.imageUrl}
+            alt={user.firstName!}
+            width={110}
+            height={110}
+          />
+          <div className="flex flex-col gap-2">
+            <h1 className="font-bold text-2xl">
+              {user.firstName} {user.lastName}
             </h1>
-            <p className="text-gray-600">
-              Track your progress and achievements, {user?.firstName || "User"}.
+            <p className="text-sm text-muted-foreground">
+              {user.emailAddresses[0].emailAddress}
             </p>
           </div>
-          <UserButton afterSignOutUrl="/" />
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold mb-2">Learning Progress</h3>
-          <p className="text-gray-600">
-            Track your AI companion interactions and learning milestones.
-          </p>
+        <div className="flex gap-4">
+          <div className="border border-black rounded-lg p-3 gap-2 flex flex-col h-fit">
+            <div className="flex gap-2 items-center">
+              <Image
+                src="/icons/check.svg"
+                alt="checkmark"
+                width={22}
+                height={22}
+              />
+              <p className="text-2xl font-bold">{sessionHistory.length}</p>
+            </div>
+            <div>Lessons Completed</div>
+          </div>
+          <div className="border border-black rounded-lg p-3 gap-2 flex flex-col h-fit">
+            <div className="flex gap-2 items-center">
+              <Image
+                src="/icons/cap.svg"
+                alt="checkmark"
+                width={22}
+                height={22}
+              />
+              <p className="text-2xl font-bold">{companions.length}</p>
+            </div>
+            <div>Companions Created</div>
+          </div>
         </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold mb-2">Achievements</h3>
-          <p className="text-gray-600">
-            View your learning badges and accomplishments.
-          </p>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold mb-2">Study History</h3>
-          <p className="text-gray-600">
-            Review your past learning sessions and topics.
-          </p>
-        </div>
-      </div>
-    </div>
+      </section>
+      <Accordion type="multiple">
+        <AccordionItem value="recent">
+          <AccordionTrigger className="text-2xl font-bold">
+            Recent Sessions
+          </AccordionTrigger>
+          <AccordionContent>
+            <CompanionsList
+              title="Recent Sessions"
+              companions={sessionHistory}
+            />
+          </AccordionContent>
+          <AccordionItem value="companions">
+            <AccordionTrigger className="text-2xl font-bold">
+              My Companions ({companions.length})
+            </AccordionTrigger>
+            <AccordionContent>
+              <CompanionsList title="My Companions" companions={companions} />
+            </AccordionContent>
+          </AccordionItem>
+        </AccordionItem>
+      </Accordion>
+    </main>
   );
 };
 
-export default MyJourney;
+export default Profile;
