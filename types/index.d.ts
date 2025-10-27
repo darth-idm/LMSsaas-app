@@ -28,6 +28,7 @@ type Companion = {
   author: string;
   created_at?: string;
   updated_at?: string;
+  bookmarked?: boolean;
 };
 
 interface CreateCompanion {

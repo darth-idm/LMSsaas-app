@@ -4,9 +4,14 @@ import CTA from "@/components/CTA";
 import { getAllCompanions } from "@/lib/actions/companion.actions";
 import { getSubjectColor } from "@/lib/utils";
 import { getRecentSessions } from "@/lib/actions/companion.actions";
+import { currentUser } from "@clerk/nextjs/server";
 
 const Page = async () => {
-  const companions = await getAllCompanions({ limit: 3 });
+  const user = await currentUser();
+  const companions = await getAllCompanions({
+    limit: 3,
+    userId: user?.id,
+  });
   const recentSessionsCompanions = await getRecentSessions(10);
 
   // Deduplicate recent sessions by companion ID to prevent duplicate keys
@@ -25,6 +30,7 @@ const Page = async () => {
             key={`popular-${companion.id}`}
             {...companion}
             color={getSubjectColor(companion.subject)}
+            bookmarked={companion.bookmarked || false}
           />
         ))}
       </section>

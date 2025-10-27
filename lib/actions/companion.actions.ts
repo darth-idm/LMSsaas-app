@@ -24,7 +24,8 @@ export const getAllCompanions = async ({
   page = 1,
   subject,
   topic,
-}: GetAllCompanions) => {
+  userId,
+}: GetAllCompanions & { userId?: string }) => {
   const supabase = createSupabaseClient();
 
   let query = supabase.from("companions").select();
@@ -44,6 +45,17 @@ export const getAllCompanions = async ({
   const { data: companions, error } = await query;
 
   if (error) throw new Error(error.message);
+
+  // If userId is provided, add bookmark status to each companion
+  if (userId && companions) {
+    const companionsWithBookmarks = await Promise.all(
+      companions.map(async (companion) => {
+        const bookmarked = await isCompanionBookmarked(companion.id, userId);
+        return { ...companion, bookmarked };
+      })
+    );
+    return companionsWithBookmarks;
+  }
 
   return companions;
 };
@@ -84,7 +96,16 @@ export const getRecentSessions = async (limit = 10): Promise<Companion[]> => {
 
   if (error) throw new Error(error.message);
 
-  return data.map(({ companions }) => companions) as unknown as Companion[];
+  // Deduplicate companions while preserving the most recent session order
+  const companions = data.map(
+    ({ companions }) => companions
+  ) as unknown as Companion[];
+  const uniqueCompanions = companions.filter(
+    (companion, index, self) =>
+      index === self.findIndex((c) => c.id === companion.id)
+  );
+
+  return uniqueCompanions;
 };
 
 export const getUserSessions = async (
@@ -101,7 +122,16 @@ export const getUserSessions = async (
 
   if (error) throw new Error(error.message);
 
-  return data.map(({ companions }) => companions) as unknown as Companion[];
+  // Deduplicate companions while preserving the most recent session order
+  const companions = data.map(
+    ({ companions }) => companions
+  ) as unknown as Companion[];
+  const uniqueCompanions = companions.filter(
+    (companion, index, self) =>
+      index === self.findIndex((c) => c.id === companion.id)
+  );
+
+  return uniqueCompanions;
 };
 
 export const getUserCompanions = async (userId: string) => {
@@ -151,6 +181,14 @@ export const addBookmark = async (companionId: string, path: string) => {
   const { userId } = await auth();
   if (!userId) return;
   const supabase = createSupabaseClient();
+
+  // First check if bookmark already exists
+  const isBookmarked = await isCompanionBookmarked(companionId, userId);
+  if (isBookmarked) {
+    console.log("Bookmark already exists, skipping");
+    return;
+  }
+
   const { data, error } = await supabase.from("bookmarks").insert({
     companion_id: companionId,
     user_id: userId,
@@ -162,6 +200,11 @@ export const addBookmark = async (companionId: string, path: string) => {
       error.message.includes("not found")
     ) {
       console.warn("Bookmarks table not found, bookmark feature disabled");
+      return;
+    }
+    // Handle duplicate key constraint error
+    if (error.code === "23505" || error.message.includes("duplicate key")) {
+      console.log("Bookmark already exists, skipping");
       return;
     }
     throw new Error(error.message);
@@ -194,6 +237,35 @@ export const removeBookmark = async (companionId: string, path: string) => {
   }
   revalidatePath(path);
   return data;
+};
+
+// Check if a companion is bookmarked by a user
+export const isCompanionBookmarked = async (
+  companionId: string,
+  userId: string
+): Promise<boolean> => {
+  const supabase = createSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("bookmarks")
+    .select("id")
+    .eq("companion_id", companionId)
+    .eq("user_id", userId)
+    .single();
+
+  if (error) {
+    // If the bookmarks table doesn't exist or no bookmark found, return false
+    if (
+      error.message.includes("does not exist") ||
+      error.message.includes("not found") ||
+      error.code === "PGRST116" // No rows returned
+    ) {
+      return false;
+    }
+    throw new Error(error.message);
+  }
+
+  return !!data;
 };
 
 // It's almost the same as getUserCompanions, but it's for the bookmarked companions
