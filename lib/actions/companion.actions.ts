@@ -2,6 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { createSupabaseClient } from "@/lib/supabase";
+import { revalidatePath } from "next/cache";
 
 export const createCompanion = async (formData: CreateCompanion) => {
   const { userId: author } = await auth();
@@ -13,7 +14,7 @@ export const createCompanion = async (formData: CreateCompanion) => {
     .select();
 
   if (error || !data)
-    throw new Error(error?.message || "Failed to create companion");
+    throw new Error(error?.message || "Failed to create a companion");
 
   return data[0];
 };
@@ -29,11 +30,13 @@ export const getAllCompanions = async ({
   let query = supabase.from("companions").select();
 
   if (subject && topic) {
-    query = query.ilike("subject", `%${subject}%`).or(`topic.ilike.%${topic}%`);
+    query = query
+      .ilike("subject", `%${subject}%`)
+      .or(`topic.ilike.%${topic}%,name.ilike.%${topic}%`);
   } else if (subject) {
     query = query.ilike("subject", `%${subject}%`);
   } else if (topic) {
-    query = query.ilike("topic", `%${topic}%`);
+    query = query.or(`topic.ilike.%${topic}%,name.ilike.%${topic}%`);
   }
 
   query = query.range((page - 1) * limit, page * limit - 1);
@@ -50,22 +53,12 @@ export const getCompanion = async (id: string) => {
 
   const { data, error } = await supabase
     .from("companions")
-    .select("*")
-    .eq("id", id)
-    .single();
+    .select()
+    .eq("id", id);
 
-  if (error) {
-    console.error("Error fetching companion:", {
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
-      code: error.code,
-      id: id,
-    });
-    return null;
-  }
+  if (error) return console.log(error);
 
-  return data;
+  return data[0];
 };
 
 export const addToSessionHistory = async (companionId: string) => {
@@ -81,31 +74,34 @@ export const addToSessionHistory = async (companionId: string) => {
   return data;
 };
 
-export const getSessionHistory = async (limit = 10) => {
+export const getRecentSessions = async (limit = 10): Promise<Companion[]> => {
   const supabase = createSupabaseClient();
   const { data, error } = await supabase
     .from("session_history")
-    .select("companions:companion_id(*)")
+    .select(`companions:companion_id (*)`)
     .order("created_at", { ascending: false })
     .limit(limit);
 
   if (error) throw new Error(error.message);
 
-  return data.map(({ companions }) => companions).flat();
+  return data.map(({ companions }) => companions) as unknown as Companion[];
 };
 
-export const getUserSessions = async (userId: string, limit = 10) => {
+export const getUserSessions = async (
+  userId: string,
+  limit = 10
+): Promise<Companion[]> => {
   const supabase = createSupabaseClient();
   const { data, error } = await supabase
     .from("session_history")
-    .select("companions:companion_id(*)")
+    .select(`companions:companion_id (*)`)
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(limit);
 
   if (error) throw new Error(error.message);
 
-  return data.map(({ companions }) => companions).flat();
+  return data.map(({ companions }) => companions) as unknown as Companion[];
 };
 
 export const getUserCompanions = async (userId: string) => {
@@ -148,4 +144,99 @@ export const newCompanionPermissions = async () => {
   } else {
     return true;
   }
+};
+
+// Bookmarks
+export const addBookmark = async (companionId: string, path: string) => {
+  const { userId } = await auth();
+  if (!userId) return;
+  const supabase = createSupabaseClient();
+  const { data, error } = await supabase.from("bookmarks").insert({
+    companion_id: companionId,
+    user_id: userId,
+  });
+  if (error) {
+    // If the bookmarks table doesn't exist, just log and return
+    if (
+      error.message.includes("does not exist") ||
+      error.message.includes("not found")
+    ) {
+      console.warn("Bookmarks table not found, bookmark feature disabled");
+      return;
+    }
+    throw new Error(error.message);
+  }
+  // Revalidate the path to force a re-render of the page
+
+  revalidatePath(path);
+  return data;
+};
+
+export const removeBookmark = async (companionId: string, path: string) => {
+  const { userId } = await auth();
+  if (!userId) return;
+  const supabase = createSupabaseClient();
+  const { data, error } = await supabase
+    .from("bookmarks")
+    .delete()
+    .eq("companion_id", companionId)
+    .eq("user_id", userId);
+  if (error) {
+    // If the bookmarks table doesn't exist, just log and return
+    if (
+      error.message.includes("does not exist") ||
+      error.message.includes("not found")
+    ) {
+      console.warn("Bookmarks table not found, bookmark feature disabled");
+      return;
+    }
+    throw new Error(error.message);
+  }
+  revalidatePath(path);
+  return data;
+};
+
+// It's almost the same as getUserCompanions, but it's for the bookmarked companions
+export const getBookmarkedCompanions = async (
+  userId: string
+): Promise<Companion[]> => {
+  const supabase = createSupabaseClient();
+
+  // First, get the bookmarked companion IDs
+  const { data: bookmarks, error: bookmarksError } = await supabase
+    .from("bookmarks")
+    .select("companion_id")
+    .eq("user_id", userId);
+
+  if (bookmarksError) {
+    // If the bookmarks table doesn't exist, return an empty array
+    if (
+      bookmarksError.message.includes("does not exist") ||
+      bookmarksError.message.includes("not found")
+    ) {
+      console.warn("Bookmarks table not found, returning empty array");
+      return [];
+    }
+    throw new Error(bookmarksError.message);
+  }
+
+  // If no bookmarks, return empty array
+  if (!bookmarks || bookmarks.length === 0) {
+    return [];
+  }
+
+  // Extract companion IDs
+  const companionIds = bookmarks.map((bookmark) => bookmark.companion_id);
+
+  // Fetch the companions using the IDs
+  const { data: companions, error: companionsError } = await supabase
+    .from("companions")
+    .select("*")
+    .in("id", companionIds);
+
+  if (companionsError) {
+    throw new Error(companionsError.message);
+  }
+
+  return companions as unknown as Companion[];
 };

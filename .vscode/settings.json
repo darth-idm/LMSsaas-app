@@ -13,6 +13,9 @@
     "typescript": "typescript",
     "typescriptreact": "typescriptreact"
   },
+  "css.validate": false,
+  "scss.validate": false,
+  "less.validate": false,
   "cSpell.words": [
     "deepgram",
     "ilike",
@@ -20,5 +23,6 @@
     "supabase",
     "turbopack",
     "vapi"
-  ]
+  ],
+  "cSpell.ignoreWords": ["jsmastery"]
 }
