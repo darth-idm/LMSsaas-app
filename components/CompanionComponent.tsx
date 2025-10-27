@@ -83,7 +83,7 @@ const CompanionComponent = ({
       vapi.off("speech-start", onSpeechStart);
       vapi.off("speech-end", onSpeechEnd);
     };
-  }, [isClient]);
+  }, [isClient, companionId]);
 
   const toggleMicrophone = () => {
     // Only allow mute/unmute when call is active and on client side
